@@ -33,13 +33,21 @@
         <div class="circle-loader wobble"></div>
       </div>
     </div>
+    <!-- map -->
+    <div v-if="coordinates_ !== null" class="map-wrapper">
+      <display-map :lat="coordinates_[0]"
+                   :lon="coordinates_[1]"
+                   :mode="mapMode"
+                   :zoom="zoomCpt"></display-map>
+    </div>
     <!-- results -->
     <div v-if="results !== undefined"
          class="results-wrapper">
       <div class="list-group">
         <a v-for="opt in results"
            :key="opt.properties.id"
-           class="list-group-item list-group-item-action flex-column align-items-start active"
+           class="list-group-item list-group-item-action flex-column align-items-start"
+           @click.prevent="selectOption(opt)"
            href="#">
           <div class="d-flex w-100 justify-content-between">
             <h5 class="mb-1">{{ opt.properties.label }}</h5>
@@ -55,6 +63,7 @@
 <script>
 import GeocodingService from "@/services/GeocodingService";
 import {ToastService} from "@/mixins/ToastService";
+import DisplayMap from "@/components/display-map";
 
 export default {
   name: "search-location",
@@ -72,15 +81,57 @@ export default {
       defaultPlaceholder: 'ex : rue des crocodiles bleu',
       // results
       results: undefined,
+      selected: undefined,
+      mode: 'select', // select, validation, visualisation
     }
   },
   watch: {},
-  computed: {},
+  computed: {
+    mapMode() {
+      switch (this.mode) {
+        case 'validation':
+          return 'area';
+        default:
+          return 'marker';
+      }
+    },
+    coordinates_() {
+      let coord = this?.selected?.geometry?.coordinates;
+      if (coord !== undefined && coord !== null) {
+        return coord;
+      }
+      return null;
+    },
+    selectedTypeCpt() {
+      if (this.selected?.properties?.type !== undefined) {
+        return this.selected?.properties?.type;
+      }
+      return 'street';
+    },
+    zoomCpt() {
+      let add = 0;
+      if (this.mode !== 'select') {
+        add = 5;
+      }
+      switch (this.selectedTypeCpt) {
+        case 'municipality':
+          return 3 + add;
+        case 'locality':
+        case 'housenumber':
+          return 7 + add;
+        default:
+          return 12 + add;
+      }
+    },
+  },
   created() {
   },
   mounted() {
   },
   methods: {
+    selectOption(opt) {
+      this.selected = opt;
+    },
     checkQuery() {
       // query > 3 chars
       // query !== lastQuery
@@ -99,6 +150,8 @@ export default {
         return;
       }
       this.results = undefined;
+      this.selected = undefined;
+
       this.loading = true;
       this.geocoding.searchLocation(this.query, this.type)
           .then(response => {
@@ -120,7 +173,7 @@ export default {
       ;
     }
   },
-  components: {},
+  components: {DisplayMap},
   beforeUnmount() {
   }
 }
