@@ -14,9 +14,16 @@ export class User {
 
     // create object from json
     static fromObject(json) {
+        let inputLocations = [];
+        if (Array.isArray(json.locations)) {
+            json.locations.forEach(loc => {
+                inputLocations.push(Location.fromObject(loc));
+            });
+        }
+
         let user = new User(json.nickname);
         user.setCustomStyle(json.customStyle);
-        user.setLocations(json.locations);
+        user.setLocations(inputLocations);
         user.id = json.id;
         user.profilePicture = json.profilePicture;
         return user;
@@ -41,10 +48,15 @@ export class User {
 
     // js vanilla object to use in localStorage
     toObject_() {
+        let outputLocations = [];
+        this.locations.forEach(loc => {
+            outputLocations.push(loc.toObject_());
+        });
+
         return {
             nickname: this.nickname,
             customStyle: this.customStyle,
-            locations: this.locations,
+            locations: outputLocations,
             id: this.id,
             profilePicture: this.profilePicture,
         };

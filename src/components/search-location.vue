@@ -33,11 +33,17 @@
         <div class="circle-loader wobble"></div>
       </div>
     </div>
+    <!-- dialog -->
+    <dialog-map v-if="coordinates_ !== null"
+                v-model="range"
+                :data="selected"
+    ></dialog-map>
     <!-- map -->
     <div v-if="coordinates_ !== null" class="map-wrapper">
       <display-map :lat="coordinates_[0]"
                    :lon="coordinates_[1]"
                    :mode="mapMode"
+                   :area-size="areaSizeCpt"
                    :zoom="zoomCpt"></display-map>
     </div>
     <!-- results -->
@@ -64,6 +70,7 @@
 import GeocodingService from "@/services/GeocodingService";
 import {ToastService} from "@/mixins/ToastService";
 import DisplayMap from "@/components/display-map";
+import DialogMap from "@/components/dialog-map";
 
 export default {
   name: "search-location",
@@ -82,11 +89,21 @@ export default {
       // results
       results: undefined,
       selected: undefined,
-      mode: 'select', // select, validation, visualisation
+      //mode: 'select', // select, validation, visualisation
+      range: 5,
     }
   },
   watch: {},
   computed: {
+    areaSizeCpt() {
+      return this.range * 500;
+    },
+    mode() {
+      if (this.selected !== undefined) {
+        return 'validation';
+      }
+      return 'select';
+    },
     mapMode() {
       switch (this.mode) {
         case 'validation':
@@ -173,7 +190,7 @@ export default {
       ;
     }
   },
-  components: {DisplayMap},
+  components: {DialogMap, DisplayMap},
   beforeUnmount() {
   }
 }
